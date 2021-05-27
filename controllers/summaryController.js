@@ -84,7 +84,7 @@ exports.report = async (req, res, next) => {
     let data = [];
 
     for (const val of rows) {
-      obj = { newHypertensitive: 0, knownHypertensitive: "0" }
+      obj = { newHypertensitive: 0, knownHypertensitive: 0, newDiabetic: 0, knownDiabetic:0 }
       dataperser = { location: val.location_id, info: obj }
 
       if (data.includes(val.location_id)) {
@@ -97,15 +97,28 @@ exports.report = async (req, res, next) => {
           obj.knownHypertensitive = data[val.location_id].knownHypertensitive + 1
         }
 
+
+        if (typeof (data[val.location_id].newDiabetic) === 'undefined') {
+          obj.newDiabetic = 1
+          obj.knownDiabetic = 1
+        } else {
+          obj.newDiabetic = data[val.location_id].newDiabetic + 1
+          obj.knownDiabetic = data[val.location_id].knownDiabetic + 1
+        }
+
+
         for (const dataval of data) {
           if (dataval.location && dataval.location === val.location_id && data.length > 0) {
             obj.newHypertensitive = dataval.info.newHypertensitive + 1;
             obj.knownHypertensitive = dataval.info.knownHypertensitive + 1;
           }
 
+          if (dataval.location && dataval.location === val.location_id && data.length > 0) {
+            obj.newDiabetic = dataval.info.newDiabetic + 1;
+            obj.knownDiabetic = dataval.info.knownDiabetic + 1;
+          }
+
         }
-
-
 
       } else {
         data.push(val.location_id)
@@ -116,7 +129,7 @@ exports.report = async (req, res, next) => {
         } else if (val.htn_status === 7285) {
           obj.newHypertensitive = 1
           obj.knownHypertensitive = 0
-        } else if (val.htn_status === 7285) {
+        } else if (val.htn_status === 7286) {
           obj.newHypertensitive = 0
           obj.knownHypertensitive = 1
         } else {
@@ -124,15 +137,32 @@ exports.report = async (req, res, next) => {
           obj.knownHypertensitive = 0
         }
 
+        if (val.dm_status === 0) {
+          obj.newDiabetic = 0
+          obj.knownDiabetic = 0
+        } else if (val.dm_status === 7281) {
+          obj.newDiabetic = 1
+          obj.knownDiabetic = 0
+        } else if (val.dm_status === 7282) {
+          obj.newDiabetic = 0
+          obj.knownDiabetic = 1
+        } else {
+          obj.newDiabetic = 0
+          obj.knownDiabetic = 0
+        }
+
       }
-
-
       dataperser = { location: val.location_id, info: obj }
-
-
       data[val.location_id] = dataperser
-
     }
+
+    for (const responposeData of data) {
+      if(typeof(responseData) !== 'object'){
+        data.splice(responposeData, 1);
+      }
+    }
+
+    data.splice(-1,1)
 
     res.status(200).json(data);
 
