@@ -40,8 +40,6 @@ exports.reportMonthly = async (req, res, next) => {
       [req.body.location_id]
       );
 
-      console.log(req.body.location_id)
-
     if (rows.length === 0) {
       return res.status(200).json({
         message:
@@ -82,10 +80,13 @@ exports.report = async (req, res, next) => {
     }
 
     let data = [];
+    let indexVal = 0
 
     for (const val of rows) {
+     indexval = indexVal + 1
       obj = { newHypertensitive: 0, knownHypertensitive: 0, newDiabetic: 0, knownDiabetic:0 }
       dataperser = { location: val.location_id, info: obj }
+   
 
       if (data.includes(val.location_id)) {
 
@@ -108,7 +109,13 @@ exports.report = async (req, res, next) => {
 
 
         for (const dataval of data) {
+                   if(typeof(dataval) !== 'object'){
+data.splice(dataval, 1);
+continue
+}
+
           if (dataval.location && dataval.location === val.location_id && data.length > 0) {
+
             obj.newHypertensitive = dataval.info.newHypertensitive + 1;
             obj.knownHypertensitive = dataval.info.knownHypertensitive + 1;
           }
@@ -163,6 +170,17 @@ exports.report = async (req, res, next) => {
     }
 
     data.splice(-1,1)
+
+for(const cleanData of data){
+  if(typeof(cleanData) !== 'object'|| cleanData == null){
+        data.splice(cleanData, 1);
+}
+}
+
+ data = data.filter(function (el) {
+  return el != null;
+});
+
 
     res.status(200).json(data);
 
