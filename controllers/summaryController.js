@@ -34,7 +34,13 @@ exports.insert = async (req, res, next) => {
 exports.reportMonthly = async (req, res, next) => {
   try {
 
-    const [rows] = await db_connection.execute("SELECT * FROM `flat_cdm_summary`");
+    const [rows] = await db_connection.execute(
+      //"SELECT * FROM `flat_cdm_summary` WHERE `location_id` = ?", [req.params.location_id]
+      "SELECT * FROM `flat_cdm_summary` WHERE `location_id` = ?",
+      [req.body.location_id]
+      );
+
+      console.log(req.body.location_id)
 
     if (rows.length === 0) {
       return res.status(200).json({
@@ -43,7 +49,19 @@ exports.reportMonthly = async (req, res, next) => {
       });
     }
 
-    res.status(200).json(rows);
+    let data = [];
+    
+    for (const val of rows) {
+      let user = await db_connection.execute(
+        "SELECT * FROM `patient` WHERE `patient_id` = ?",
+        [val.patient_id]
+        
+    );
+    val.user = user[0]
+      
+    }
+
+    res.status(200).json({rows});
 
   } catch (err) {
     next(err);
@@ -54,7 +72,7 @@ exports.reportMonthly = async (req, res, next) => {
 exports.report = async (req, res, next) => {
   try {
 
-    const [rows] = await db_connection.execute("SELECT * FROM `flat_cdm_summary` GROUP BY 'location_id'");
+    const [rows] = await db_connection.execute("SELECT * FROM `flat_cdm_summary`");
 
     if (rows.length === 0) {
       return res.status(200).json({
@@ -66,24 +84,53 @@ exports.report = async (req, res, next) => {
     let data = [];
 
     for (const val of rows) {
+      obj = { newHypertensitive: 0, knownHypertensitive: "0" }
+      dataperser = { location: val.location_id, info: obj }
+
       if (data.includes(val.location_id)) {
-        data[val.location_id].newHypertensitive = data[val.location_id].newHypertensitive + 1
+
+        if (typeof (data[val.location_id].newHypertensitive) === 'undefined') {
+          obj.newHypertensitive = 1
+          obj.knownHypertensitive = 1
+        } else {
+          obj.newHypertensitive = data[val.location_id].newHypertensitive + 1
+          obj.knownHypertensitive = data[val.location_id].knownHypertensitive + 1
+        }
+
+        for (const dataval of data) {
+          if (dataval.location && dataval.location === val.location_id && data.length > 0) {
+            obj.newHypertensitive = dataval.info.newHypertensitive + 1;
+            obj.knownHypertensitive = dataval.info.knownHypertensitive + 1;
+          }
+
+        }
+
+
 
       } else {
-        obj = {}
+        data.push(val.location_id)
+        data[val.location_id] = dataperser
         if (val.htn_status === 0) {
           obj.newHypertensitive = 0
-          obj.knownHypertensitive = 1
+          obj.knownHypertensitive = 0
         } else if (val.htn_status === 7285) {
           obj.newHypertensitive = 1
           obj.knownHypertensitive = 0
         } else if (val.htn_status === 7285) {
           obj.newHypertensitive = 0
           obj.knownHypertensitive = 1
+        } else {
+          obj.newHypertensitive = 0
+          obj.knownHypertensitive = 0
         }
-        data[val.location_id] = obj
 
       }
+
+
+      dataperser = { location: val.location_id, info: obj }
+
+
+      data[val.location_id] = dataperser
 
     }
 

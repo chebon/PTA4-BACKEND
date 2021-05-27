@@ -51,29 +51,3 @@ exports.fetch = async (req, res, next) => {
 
 };
 
-
-// FETCHING SINGLE USER
-exports.getUserByID = async (req, res, next) => {
-
-  try {
-
-    const [row] = await db_connection.execute(
-        "SELECT * FROM `users` WHERE `id`=?",
-        [req.params.id]
-    );
-
-    if (row.length === 0) {
-      return res.status(404).json({
-        message: "No User Found!",
-      });
-    }
-
-    res.status(200).json(row[0]);
-
-  } catch (err) {
-    next(err);
-  }
-
-};
-
-
