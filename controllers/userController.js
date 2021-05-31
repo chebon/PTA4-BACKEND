@@ -1,6 +1,6 @@
 const db_connection = require("../db-connection").promise();
 
-// INSERTING USER
+// INSERTING PATIENT
 exports.insert = async (req, res, next) => {
 
   if (!req.body.name) {
@@ -30,7 +30,7 @@ exports.insert = async (req, res, next) => {
   
 };
 
-// FETCHING ALL USERS
+// FETCHING ALL PATIENT
 exports.getAllUsers = async (req, res, next) => {
   try {
 
@@ -51,7 +51,7 @@ exports.getAllUsers = async (req, res, next) => {
 
 };
 
-// SEARCHING USERS
+// SEARCHING PATIENTS
 exports.search = async (req, res, next) => {
   try {
 
@@ -75,19 +75,19 @@ exports.search = async (req, res, next) => {
 };
 
 
-// FETCHING SINGLE USER
+// FETCHING SINGLE PATIENT
 exports.getUserByID = async (req, res, next) => {
 
   try {
 
     const [row] = await db_connection.execute(
-        "SELECT * FROM `users` WHERE `id`=?",
+        "SELECT * FROM `patient` WHERE `id`=?",
         [req.params.id]
     );
 
     if (row.length === 0) {
       return res.status(404).json({
-        message: "No User Found!",
+        message: "No Patient Found!",
       });
     }
 
@@ -99,18 +99,18 @@ exports.getUserByID = async (req, res, next) => {
 
 };
 
-// UPDATING USER
+// UPDATING PATIENT
 exports.updateUser = async (req, res, next) => {
   try {
 
     const [row] = await db_connection.execute(
-        "SELECT * FROM `users` WHERE `id`=?",
+        "SELECT * FROM `patient` WHERE `id`=?",
         [req.params.id]
     );
 
     if (row.length === 0) {
       return res.status(404).json({
-        message: "Invalid User ID",
+        message: "Invalid patient ID",
       });
     }
 
@@ -119,13 +119,13 @@ exports.updateUser = async (req, res, next) => {
     if (req.body.email) row[0].email = req.body.email;
 
     const [update] = await db_connection.execute(
-      "UPDATE `users` SET `name`=?, `email`=? WHERE `id`=?",
+      "UPDATE `patient` SET `name`=?, `email`=? WHERE `id`=?",
       [row[0].name, row[0].email, req.params.id]
     );
 
     if (update.affectedRows === 1) {
       return res.json({
-        message: "The User has been successfully updated.",
+        message: "The Patient has been successfully updated.",
       });
     }
 
